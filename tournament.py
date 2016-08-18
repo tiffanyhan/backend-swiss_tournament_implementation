@@ -123,4 +123,3 @@ def swissPairings():
     ]
     conn.close()
     return pairs
-

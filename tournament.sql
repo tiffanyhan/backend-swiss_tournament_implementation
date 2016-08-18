@@ -10,13 +10,6 @@ CREATE DATABASE tournament;
 
 \c tournament;
 
-CREATE TABLE Players (id serial primary key,
-					  name text,
-					  wins integer,
-					  matches integer);
+CREATE TABLE Players (id serial primary key, name text, wins integer, matches integer);
 
-CREATE TABLE Matches (id serial primary key,
-					  winner_id integer,
-					  loser_id integer);
-
-
+CREATE TABLE Matches (id serial primary key, winner_id integer, loser_id integer);
