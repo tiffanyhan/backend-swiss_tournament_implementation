@@ -7,6 +7,8 @@ import psycopg2
 
 from itertools import izip
 
+import bleach
+
 
 def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
@@ -50,9 +52,11 @@ def registerPlayer(name):
       name: the player's full name (need not be unique).
     """
 
+    clean_name = bleach.clean(name)
+
     conn = connect()
     c = conn.cursor()
-    c.execute('INSERT INTO players (name, wins, matches) VALUES (%s, 0, 0)', (name,))
+    c.execute('INSERT INTO players (name, wins, matches) VALUES (%s, 0, 0)', (clean_name,))
     conn.commit()
     conn.close()
 
@@ -84,13 +88,15 @@ def reportMatch(winner, loser):
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
     """
-    conn = connect()
-    c = conn.cursor()
-    c.execute('INSERT INTO matches (winner_id, loser_id) VALUES (%s, %s)', (winner, loser))
-    c.execute('UPDATE players SET wins = wins + 1 WHERE id = %s', (winner,))
-    c.execute('UPDATE players SET matches = matches + 1 WHERE id = %s or id = %s', (winner, loser))
-    conn.commit()
-    conn.close()
+    # check for the right type of expected arguments
+    if isinstance(winner, int) and isinstance(loser, int):
+        conn = connect()
+        c = conn.cursor()
+        c.execute('INSERT INTO matches (winner_id, loser_id) VALUES (%s, %s)', (winner, loser))
+        c.execute('UPDATE players SET wins = wins + 1 WHERE id = %s', (winner,))
+        c.execute('UPDATE players SET matches = matches + 1 WHERE id = %s or id = %s', (winner, loser))
+        conn.commit()
+        conn.close()
 
 def pairwise(iterable):
         "s -> (s0, s1), (s2, s3), (s4, s5), ..."
