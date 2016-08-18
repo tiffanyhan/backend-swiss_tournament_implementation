@@ -24,6 +24,7 @@ def deleteMatches():
     conn.commit()
     conn.close()
 
+
 def deletePlayers():
     """Remove all the player records from the database."""
     conn = connect()
@@ -31,6 +32,7 @@ def deletePlayers():
     c.execute('DELETE FROM players')
     conn.commit()
     conn.close()
+
 
 def countPlayers():
     """Returns the number of players currently registered."""
@@ -41,6 +43,7 @@ def countPlayers():
     num = results[0]
     conn.close()
     return num
+
 
 def registerPlayer(name):
     """Adds a player to the tournament database.
@@ -56,15 +59,17 @@ def registerPlayer(name):
 
     conn = connect()
     c = conn.cursor()
-    c.execute('INSERT INTO players (name, wins, matches) VALUES (%s, 0, 0)', (clean_name,))
+    c.execute('INSERT INTO players (name, wins, matches) \
+               VALUES (%s, 0, 0)', (clean_name,))
     conn.commit()
     conn.close()
+
 
 def playerStandings():
     """Returns a list of the players and their win records, sorted by wins.
 
-    The first entry in the list should be the player in first place, or a player
-    tied for first place if there is currently a tie.
+    The first entry in the list should be the player in first place,
+    or a player tied for first place if there is currently a tie.
 
     Returns:
       A list of tuples, each of which contains (id, name, wins, matches):
@@ -92,16 +97,21 @@ def reportMatch(winner, loser):
     if isinstance(winner, int) and isinstance(loser, int):
         conn = connect()
         c = conn.cursor()
-        c.execute('INSERT INTO matches (winner_id, loser_id) VALUES (%s, %s)', (winner, loser))
-        c.execute('UPDATE players SET wins = wins + 1 WHERE id = %s', (winner,))
-        c.execute('UPDATE players SET matches = matches + 1 WHERE id = %s or id = %s', (winner, loser))
+        c.execute('INSERT INTO matches (winner_id, loser_id) \
+                   VALUES (%s, %s)', (winner, loser))
+        c.execute('UPDATE players SET wins = wins + 1 \
+                   WHERE id = %s', (winner,))
+        c.execute('UPDATE players SET matches = matches + 1 \
+                   WHERE id = %s or id = %s', (winner, loser))
         conn.commit()
         conn.close()
+
 
 def pairwise(iterable):
         "s -> (s0, s1), (s2, s3), (s4, s5), ..."
         a = iter(iterable)
         return izip(a, a)
+
 
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
