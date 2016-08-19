@@ -7,8 +7,6 @@ import psycopg2
 
 from itertools import izip
 
-import bleach
-
 
 def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
@@ -20,7 +18,6 @@ def deleteMatches():
     conn = connect()
     c = conn.cursor()
     c.execute('DELETE FROM matches')
-    c.execute('UPDATE players SET wins = 0, matches = 0')
     conn.commit()
     conn.close()
 
@@ -54,13 +51,10 @@ def registerPlayer(name):
     Args:
       name: the player's full name (need not be unique).
     """
-
-    clean_name = bleach.clean(name)
-
     conn = connect()
     c = conn.cursor()
-    c.execute('INSERT INTO players (name, wins, matches) \
-               VALUES (%s, 0, 0)', (clean_name,))
+    c.execute('INSERT INTO players (name) \
+               VALUES (%s)', (name,))
     conn.commit()
     conn.close()
 
@@ -80,7 +74,7 @@ def playerStandings():
     """
     conn = connect()
     c = conn.cursor()
-    c.execute('SELECT * FROM players ORDER BY wins DESC')
+    c.execute('SELECT players.id, players.name, scores.wins, scores.matches FROM players join scores ON players.id = scores.player_id ORDER BY scores.wins DESC')
     results = c.fetchall()
     conn.close()
     return results
@@ -93,18 +87,12 @@ def reportMatch(winner, loser):
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
     """
-    # check for the right type of expected arguments
-    if isinstance(winner, int) and isinstance(loser, int):
-        conn = connect()
-        c = conn.cursor()
-        c.execute('INSERT INTO matches (winner_id, loser_id) \
-                   VALUES (%s, %s)', (winner, loser))
-        c.execute('UPDATE players SET wins = wins + 1 \
-                   WHERE id = %s', (winner,))
-        c.execute('UPDATE players SET matches = matches + 1 \
-                   WHERE id = %s or id = %s', (winner, loser))
-        conn.commit()
-        conn.close()
+    conn = connect()
+    c = conn.cursor()
+    c.execute('INSERT INTO matches (winner_id, loser_id) \
+               VALUES (%s, %s)', (winner, loser))
+    conn.commit()
+    conn.close()
 
 
 def pairwise(iterable):
@@ -128,14 +116,11 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
-    conn = connect()
-    c = conn.cursor()
-    c.execute('SELECT * FROM players ORDER BY wins DESC')
-    results = c.fetchall()
+
+    results = playerStandings()
     players = [{'id': row[0], 'name': row[1]} for row in results]
     pairs = [
         (player1['id'], player1['name'], player2['id'], player2['name'])
         for player1, player2 in pairwise(players)
     ]
-    conn.close()
     return pairs

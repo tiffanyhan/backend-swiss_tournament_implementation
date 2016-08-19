@@ -13,8 +13,9 @@ In order to run this program:
 
 - open up a command line prompt for postgresql by typing
   the command: 'psql'
-- run each SQL statement in the file 'tournament.sql' inside
-  the postgresql command line prompt
+- run the SQL commands in the file 'tournament.sql' inside
+  the postgresql command line prompt by typing the command:
+  'psql -f tournament.sql'
 
 - you are now finally ready to test the code in the file
   'tournament.py'.  to do this, run the tests in the file
