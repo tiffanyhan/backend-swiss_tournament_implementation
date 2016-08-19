@@ -9,10 +9,8 @@ In order to run this program:
 
 - now that you're logged in, navigate back to the project directory
   in your new Vagrant environment using the command: 'cd /vagrant'
-- now you can cd back into the 'tournament' project directory
+- cd back into the 'tournament' project directory
 
-- open up a command line prompt for postgresql by typing
-  the command: 'psql'
 - run the SQL commands in the file 'tournament.sql' inside
   the postgresql command line prompt by typing the command:
   'psql -f tournament.sql'
