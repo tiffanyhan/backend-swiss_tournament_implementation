@@ -7,6 +7,8 @@ import psycopg2
 
 from itertools import izip
 
+from contextlib import contextmanager
+
 
 def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
@@ -16,33 +18,44 @@ def connect():
         print("Connection failed")
 
 
-def deleteMatches():
-    """Remove all the match records from the database."""
+@contextmanager
+def get_cursor():
+    """Query helper function using context lib.  Creates a cursor
+    from a database connection object, and performs queries
+    using that cursor.
+    """
     conn = connect()
     c = conn.cursor()
-    c.execute('DELETE FROM matches')
-    conn.commit()
-    conn.close()
+
+    try:
+        yield c
+    except:
+        raise
+    else:
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def deleteMatches():
+    """Remove all the match records from the database."""
+    with get_cursor() as c:
+        c.execute('DELETE FROM matches')
 
 
 def deletePlayers():
     """Remove all the player records from the database."""
-    conn = connect()
-    c = conn.cursor()
-    c.execute('DELETE FROM players')
-    conn.commit()
-    conn.close()
+    with get_cursor() as c:
+        c.execute('DELETE FROM players')
 
 
 def countPlayers():
     """Returns the number of players currently registered."""
-    conn = connect()
-    c = conn.cursor()
-    c.execute('SELECT count(*) AS num FROM players')
-    results = c.fetchone()
-    num = results[0]
-    conn.close()
-    return num
+    with get_cursor() as c:
+        c.execute('SELECT count(*) AS num FROM players')
+        results = c.fetchone()
+        num = results[0]
+        return num
 
 
 def registerPlayer(name):
@@ -54,12 +67,9 @@ def registerPlayer(name):
     Args:
       name: the player's full name (need not be unique).
     """
-    conn = connect()
-    c = conn.cursor()
-    c.execute('INSERT INTO players (name) \
-               VALUES (%s)', (name,))
-    conn.commit()
-    conn.close()
+    with get_cursor() as c:
+        c.execute('INSERT INTO players (name) \
+                   VALUES (%s)', (name,))
 
 
 def playerStandings():
@@ -75,12 +85,10 @@ def playerStandings():
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
-    conn = connect()
-    c = conn.cursor()
-    c.execute('SELECT players.id, players.name, scores.wins, scores.matches FROM players join scores ON players.id = scores.player_id ORDER BY scores.wins DESC')
-    results = c.fetchall()
-    conn.close()
-    return results
+    with get_cursor() as c:
+        c.execute('SELECT players.id, players.name, scores.wins, scores.matches FROM players join scores ON players.id = scores.player_id ORDER BY scores.wins DESC')
+        results = c.fetchall()
+        return results
 
 
 def reportMatch(winner, loser):
@@ -90,12 +98,9 @@ def reportMatch(winner, loser):
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
     """
-    conn = connect()
-    c = conn.cursor()
-    c.execute('INSERT INTO matches (winner_id, loser_id) \
-               VALUES (%s, %s)', (winner, loser))
-    conn.commit()
-    conn.close()
+    with get_cursor() as c:
+        c.execute('INSERT INTO matches (winner_id, loser_id) \
+                   VALUES (%s, %s)', (winner, loser))
 
 
 def pairwise(iterable):
